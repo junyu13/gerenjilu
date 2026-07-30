@@ -629,7 +629,7 @@
   <div class="search-wrap">
     <div class="search-box">
       <span class="search-icon">🔍</span>
-      <input class="search-input" id="searchInput" type="text" placeholder="搜索标题...">
+      <input class="search-input" id="searchInput" type="text" placeholder="搜索标题、笔记、状态...">
       <button class="search-clear" id="searchClear">✕</button>
     </div>
   </div>
@@ -926,17 +926,42 @@
     }
 
     function getFilteredItems() {
+      const q = searchQuery.trim().toLowerCase();
+      const isGlobalSearch = q.length > 0;
+
+      if (isGlobalSearch) {
+        // Global search across ALL types: title + notes + status + extra + year
+        const results = [];
+        TYPES.forEach(typeDef => {
+          (data[typeDef.key] || []).forEach(item => {
+            const statusDef = typeDef.statuses.find(s => s.key === item.status);
+            const statusLabel = statusDef ? statusDef.label : '';
+            const searchText = [
+              item.title,
+              item.notes || '',
+              statusLabel,
+              item.director || '',
+              item.author || '',
+              item.year || '',
+            ].join(' ').toLowerCase();
+
+            if (searchText.includes(q)) {
+              results.push({ ...item, _typeKey: typeDef.key });
+            }
+          });
+        });
+        results.sort((a, b) => b.createdAt - a.createdAt);
+        return { items: results, type: null, isGlobalSearch: true };
+      }
+
+      // Normal per-tab browsing (no search query)
       const type = getCurrentType();
       let items = data[currentTab] || [];
-      if (searchQuery.trim()) {
-        const q = searchQuery.trim().toLowerCase();
-        items = items.filter(item => item.title.toLowerCase().includes(q));
-      }
       if (currentFilter !== 'all') {
         items = items.filter(item => item.status === currentFilter);
       }
       items = [...items].sort((a, b) => b.createdAt - a.createdAt);
-      return { items, type };
+      return { items, type, isGlobalSearch: false };
     }
 
     // ==================== ID GENERATOR ====================
@@ -1019,15 +1044,15 @@
     }
 
     function renderList() {
-      const { items, type } = getFilteredItems();
+      const { items, type, isGlobalSearch } = getFilteredItems();
 
       if (items.length === 0) {
         const msg = searchQuery.trim()
-          ? `没有找到包含"${searchQuery.trim()}"的${type.label}`
+          ? `没有找到包含"${searchQuery.trim()}"的记录`
           : `还没有${type.label}记录\n点击右下角 + 开始添加吧`;
         listArea.innerHTML = `
           <div class="empty-state">
-            <div class="empty-icon">${searchQuery.trim() ? '🔍' : type.icon}</div>
+            <div class="empty-icon">${searchQuery.trim() ? '🔍' : (type ? type.icon : '📽')}</div>
             <div class="empty-text">${msg.replace(/\n/g, '<br>')}</div>
           </div>`;
         return;
@@ -1035,7 +1060,8 @@
 
       // Build cards
       listArea.innerHTML = items.map(item => {
-        const typeDef = TYPES.find(t => t.key === currentTab);
+        const typeKey = isGlobalSearch ? item._typeKey : currentTab;
+        const typeDef = TYPES.find(t => t.key === typeKey);
         const statusDef = typeDef.statuses.find(s => s.key === item.status);
         const statusLabel = statusDef ? statusDef.label : '';
         const statusCls = statusDef ? statusDef.cls : '';
@@ -1047,21 +1073,43 @@
         if (item.year) metaParts.push(item.year);
         const metaText = metaParts.join(' · ');
 
+        // Show type badge in global search
+        const typeBadge = isGlobalSearch
+          ? `<span style="font-size:0.7rem;background:var(--surface2);color:var(--text2);padding:2px 7px;border-radius:8px;flex-shrink:0;">${typeDef.icon} ${typeDef.label}</span>`
+          : '';
+
         const coverId = 'cover_' + item.id;
         const placeholderId = 'ph_' + item.id;
 
+        // Highlight matching notes snippet in global search
+        let notesSnippet = '';
+        if (isGlobalSearch && item.notes) {
+          const q = searchQuery.trim().toLowerCase();
+          const lowerNotes = item.notes.toLowerCase();
+          const idx = lowerNotes.indexOf(q);
+          if (idx >= 0) {
+            const start = Math.max(0, idx - 12);
+            const end = Math.min(item.notes.length, idx + q.length + 20);
+            const prefix = start > 0 ? '…' : '';
+            const suffix = end < item.notes.length ? '…' : '';
+            notesSnippet = `<div style="font-size:0.72rem;color:var(--text3);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">📝 ${prefix}${escapeHtml(item.notes.slice(start, end))}${suffix}</div>`;
+          }
+        }
+
         return `
-          <div class="card" data-id="${item.id}">
+          <div class="card" data-id="${item.id}" data-type="${typeKey}">
             <img class="card-cover" id="${coverId}" src="" alt="" loading="lazy" style="display:none;"
               onerror="this.style.display='none';document.getElementById('${placeholderId}').style.display='flex';"
               onload="this.style.display='block';document.getElementById('${placeholderId}').style.display='none';">
             <div class="card-cover-placeholder" id="${placeholderId}">${typeDef.icon}</div>
             <div class="card-info">
               <div class="card-title">${escapeHtml(item.title)}</div>
+              ${notesSnippet}
               ${metaText ? `<div class="card-meta">${escapeHtml(metaText)}</div>` : ''}
               <div class="card-bottom">
                 <div class="stars-sm">${starsHtml}</div>
                 <span class="status-tag ${statusCls}">${statusLabel}</span>
+                ${typeBadge}
               </div>
             </div>
           </div>`;
@@ -1079,7 +1127,7 @@
             }
           });
         }
-        card.addEventListener('click', () => showDetail(card.dataset.id));
+        card.addEventListener('click', () => showDetail(card.dataset.id, card.dataset.type));
       });
     }
 
@@ -1408,11 +1456,12 @@
     }
 
     // ==================== DETAIL ====================
-    async function showDetail(id) {
-      const item = data[currentTab].find(i => i.id === id);
+    async function showDetail(id, typeKey) {
+      const lookupType = typeKey || currentTab;
+      const item = data[lookupType].find(i => i.id === id);
       if (!item) return;
 
-      const type = getCurrentType();
+      const type = TYPES.find(t => t.key === lookupType);
       const statusDef = type.statuses.find(s => s.key === item.status);
       const statusLabel = statusDef ? statusDef.label : '';
       const statusCls = statusDef ? statusDef.cls : '';
@@ -1448,10 +1497,20 @@
 
       $('#btnDetailEdit').addEventListener('click', () => {
         detailOverlay.style.display = 'none';
+        // Switch to correct type tab before editing
+        if (currentTab !== lookupType) {
+          currentTab = lookupType;
+          currentFilter = 'all';
+          renderAll();
+        }
         openForm(item);
       });
       $('#btnDetailDelete').addEventListener('click', () => {
         detailOverlay.style.display = 'none';
+        // Switch to correct type tab before deleting
+        if (currentTab !== lookupType) {
+          currentTab = lookupType;
+        }
         confirmDelete(id);
       });
     }
@@ -1557,12 +1616,19 @@
     searchInput.addEventListener('input', () => {
       searchQuery = searchInput.value;
       searchClear.classList.toggle('visible', searchQuery.length > 0);
+      // Hide/show filter row based on whether we're searching
+      if (searchQuery.trim()) {
+        filterRow.style.display = 'none';
+      } else {
+        filterRow.style.display = '';
+      }
       renderList();
     });
     searchClear.addEventListener('click', () => {
       searchInput.value = '';
       searchQuery = '';
       searchClear.classList.remove('visible');
+      filterRow.style.display = '';
       renderList();
       searchInput.focus();
     });
