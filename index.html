@@ -1,0 +1,1612 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#4caf84">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <title>个人记录</title>
+  <link rel="manifest" href="./manifest.json">
+  <style>
+    /* ========== Reset & Base ========== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #f5f5f7;
+      --surface: #ffffff;
+      --surface2: #f0f0f3;
+      --border: #e0e0e5;
+      --text: #1a1a1e;
+      --text2: #6a6a78;
+      --text3: #9a9aa8;
+      --accent: #4caf84;
+      --accent-light: #81c784;
+      --accent-dim: #388e5b;
+      --red: #e85555;
+      --green: #4caf84;
+      --orange: #f0a050;
+      --blue: #4a8eff;
+      --chip-bg: #f0f0f3;
+      --chip-active: #e0f0e8;
+      --shadow: 0 2px 12px rgba(0,0,0,0.08);
+      --shadow-lg: 0 8px 30px rgba(0,0,0,0.12);
+      --radius: 14px;
+      --radius-sm: 8px;
+      --radius-xs: 6px;
+      --safe-bottom: env(safe-area-inset-bottom, 12px);
+    }
+    html { font-size: 16px; -webkit-tap-highlight-color: transparent; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100dvh;
+      max-width: 480px;
+      margin: 0 auto;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+      user-select: none;
+      -webkit-user-select: none;
+      position: relative;
+      padding-bottom: 130px;
+    }
+
+    /* ========== Header ========== */
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--bg);
+      padding: 14px 16px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .header-title { font-size: 1.35rem; font-weight: 700; letter-spacing: -0.3px; color: var(--text); }
+    .header-actions { display: flex; gap: 8px; }
+    .icon-btn {
+      width: 38px; height: 38px;
+      border: none;
+      background: var(--surface);
+      border-radius: 50%;
+      font-size: 1.1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text2);
+      transition: 0.15s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+    .icon-btn:active { transform: scale(0.92); background: var(--surface2); }
+
+    /* ========== Search ========== */
+    .search-wrap {
+      padding: 0 16px 10px;
+      position: sticky;
+      top: 54px;
+      z-index: 99;
+      background: var(--bg);
+    }
+    .search-box {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 0 14px;
+      border: 1.5px solid var(--border);
+      transition: 0.2s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    .search-box:focus-within { border-color: var(--accent); }
+    .search-icon { font-size: 1rem; flex-shrink: 0; }
+    .search-input {
+      flex: 1;
+      background: none;
+      border: none;
+      color: var(--text);
+      font-size: 0.95rem;
+      padding: 12px 0;
+      outline: none;
+      min-width: 0;
+    }
+    .search-input::placeholder { color: var(--text3); }
+    .search-clear {
+      display: none;
+      background: none;
+      border: none;
+      color: var(--text3);
+      font-size: 1.1rem;
+      cursor: pointer;
+      padding: 4px;
+    }
+    .search-clear.visible { display: block; }
+
+    /* ========== Filter Chips ========== */
+    .filter-row {
+      display: flex;
+      gap: 8px;
+      padding: 0 16px 12px;
+      flex-wrap: wrap;
+    }
+    .chip {
+      padding: 7px 15px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: var(--chip-bg);
+      color: var(--text2);
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: 0.15s;
+      white-space: nowrap;
+    }
+    .chip:active { transform: scale(0.95); }
+    .chip.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+    /* ========== Card List ========== */
+    .list-area { padding: 0 16px 20px; display: flex; flex-direction: column; gap: 10px; }
+    .card {
+      display: flex;
+      gap: 12px;
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 12px;
+      cursor: pointer;
+      transition: 0.15s;
+      border: 1px solid var(--border);
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    }
+    .card:active { transform: scale(0.985); border-color: var(--accent-light); background: #fafbfa; }
+    .card-cover {
+      width: 64px; height: 90px;
+      border-radius: var(--radius-xs);
+      object-fit: cover;
+      flex-shrink: 0;
+      background: var(--surface2);
+    }
+    .card-cover-placeholder {
+      width: 64px; height: 90px;
+      border-radius: var(--radius-xs);
+      flex-shrink: 0;
+      background: var(--surface2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.6rem;
+      color: var(--text3);
+    }
+    .card-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+    .card-title { font-size: 0.95rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .card-meta { font-size: 0.78rem; color: var(--text2); }
+    .card-bottom { display: flex; align-items: center; gap: 8px; margin-top: auto; }
+    .stars-sm { display: flex; gap: 1px; }
+    .star-sm { font-size: 0.75rem; }
+    .star-sm.on { color: #f0b830; }
+    .star-sm.off { color: #d0d0d8; }
+    .status-tag {
+      font-size: 0.7rem;
+      padding: 3px 8px;
+      border-radius: 10px;
+      font-weight: 600;
+    }
+    .tag-want { background: #e8f0ff; color: var(--blue); }
+    .tag-doing { background: #fff3e0; color: #e67e22; }
+    .tag-done { background: #e8f5e9; color: var(--accent-dim); }
+
+    /* ========== Empty State ========== */
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      padding: 60px 20px;
+      color: var(--text3);
+    }
+    .empty-icon { font-size: 3.5rem; opacity: 0.5; }
+    .empty-text { font-size: 0.9rem; }
+
+    /* ========== Bottom Tabs ========== */
+    .bottom-tabs {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      max-width: 480px;
+      width: 100%;
+      display: flex;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 6px 0 var(--safe-bottom);
+      z-index: 100;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.04);
+    }
+    .tab-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      padding: 8px 0;
+      border: none;
+      background: none;
+      color: var(--text3);
+      cursor: pointer;
+      transition: 0.15s;
+      font-size: 0.7rem;
+    }
+    .tab-icon { font-size: 1.3rem; }
+    .tab-item:active { transform: scale(0.92); }
+    .tab-item.active { color: var(--accent); }
+    .tab-badge {
+      min-width: 18px; height: 18px;
+      border-radius: 9px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 0.65rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 5px;
+      margin-bottom: -2px;
+    }
+
+    /* ========== FAB ========== */
+    .fab {
+      position: fixed;
+      bottom: 100px;
+      right: max(16px, calc((100vw - 480px) / 2 + 16px));
+      width: 52px; height: 52px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #fff;
+      font-size: 1.6rem;
+      border: none;
+      box-shadow: 0 4px 16px rgba(76,175,132,0.35);
+      cursor: pointer;
+      z-index: 99;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: 0.2s;
+    }
+    .fab:active { transform: scale(0.9); }
+
+    /* ========== Modal ========== */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.35);
+      z-index: 200;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      animation: fadeIn 0.2s;
+    }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    .modal {
+      background: var(--surface);
+      border-radius: 18px 18px 0 0;
+      width: 100%;
+      max-width: 480px;
+      max-height: 85dvh;
+      overflow-y: auto;
+      padding: 10px 20px 30px;
+      animation: slideUp 0.25s ease-out;
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+    }
+    .modal-handle {
+      width: 36px; height: 4px;
+      border-radius: 2px;
+      background: var(--border);
+      margin: 0 auto 14px;
+    }
+    .modal-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 16px; text-align: center; color: var(--text); }
+    .form-group { margin-bottom: 14px; }
+    .form-label {
+      display: block;
+      font-size: 0.8rem;
+      color: var(--text2);
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+    .form-input, .form-textarea {
+      width: 100%;
+      background: var(--surface2);
+      border: 1.5px solid transparent;
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-size: 0.95rem;
+      padding: 11px 14px;
+      outline: none;
+      font-family: inherit;
+      transition: 0.2s;
+    }
+    .form-input:focus, .form-textarea:focus { border-color: var(--accent); background: #fafbfa; }
+    .form-textarea { resize: vertical; min-height: 70px; }
+    .form-row { display: flex; gap: 10px; }
+    .form-row > * { flex: 1; }
+
+    /* Star input */
+    .star-input { display: flex; gap: 6px; }
+    .star-input-btn { font-size: 1.6rem; cursor: pointer; background: none; border: none; padding: 0; color: #d0d0d8; transition: 0.1s; }
+    .star-input-btn.on { color: #f0b830; }
+
+    /* Cover section */
+    .cover-actions { display: flex; gap: 8px; margin-top: 8px; }
+    .cover-action-btn {
+      flex: 1;
+      padding: 9px 0;
+      border-radius: var(--radius-sm);
+      border: 1.5px dashed var(--border);
+      background: var(--surface2);
+      color: var(--text2);
+      font-size: 0.8rem;
+      cursor: pointer;
+      font-family: inherit;
+      transition: 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+    .cover-action-btn:active { background: #e8f5e9; border-color: var(--accent); color: var(--accent); }
+    .cover-preview-row { display: flex; gap: 12px; align-items: flex-start; margin-top: 8px; }
+    .cover-preview {
+      width: 72px; height: 100px;
+      border-radius: var(--radius-xs);
+      object-fit: cover;
+      background: var(--surface2);
+      flex-shrink: 0;
+      border: 1px solid var(--border);
+    }
+    .cover-preview-placeholder {
+      width: 72px; height: 100px;
+      border-radius: var(--radius-xs);
+      background: var(--surface2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.8rem;
+      color: var(--text3);
+      flex-shrink: 0;
+      border: 1px solid var(--border);
+    }
+
+    /* Search cover results */
+    .cover-search-panel {
+      display: none;
+      padding: 10px 14px;
+      background: var(--surface2);
+      border-radius: var(--radius-sm);
+      margin-top: 8px;
+    }
+    .cover-search-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .cover-search-item {
+      aspect-ratio: 2/3;
+      border-radius: var(--radius-xs);
+      overflow: hidden;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: 0.15s;
+      background: var(--surface);
+    }
+    .cover-search-item:hover, .cover-search-item:active { border-color: var(--accent); }
+    .cover-search-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .cover-search-loading {
+      text-align: center;
+      padding: 14px;
+      color: var(--text3);
+      font-size: 0.82rem;
+    }
+    .cover-search-empty {
+      text-align: center;
+      padding: 14px;
+      color: var(--text3);
+      font-size: 0.82rem;
+    }
+
+    /* Buttons */
+    .btn-row { display: flex; gap: 10px; margin-top: 18px; }
+    .btn {
+      flex: 1;
+      padding: 13px;
+      border-radius: var(--radius-sm);
+      border: none;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.15s;
+      font-family: inherit;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:active { background: var(--accent-dim); }
+    .btn-secondary { background: var(--surface2); color: var(--text); }
+    .btn-secondary:active { background: var(--border); }
+    .btn-danger { background: #fde8e8; color: var(--red); }
+    .btn-danger:active { background: #fcc; }
+
+    /* ========== Detail View ========== */
+    .detail-cover-wrap {
+      width: 100%;
+      max-height: 280px;
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 16px;
+      background: var(--surface2);
+    }
+    .detail-cover { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .detail-cover-placeholder {
+      width: 100%; height: 200px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 4rem;
+      background: var(--surface2);
+      border-radius: var(--radius);
+      margin-bottom: 16px;
+    }
+    .detail-title { font-size: 1.25rem; font-weight: 700; margin-bottom: 6px; color: var(--text); }
+    .detail-meta { font-size: 0.85rem; color: var(--text2); margin-bottom: 12px; }
+    .detail-stars { display: flex; gap: 2px; margin-bottom: 8px; }
+    .detail-star { font-size: 1.2rem; }
+    .detail-star.on { color: #f0b830; }
+    .detail-star.off { color: #d0d0d8; }
+    .detail-tags { margin-bottom: 14px; }
+    .detail-notes { font-size: 0.9rem; color: var(--text2); line-height: 1.6; white-space: pre-wrap; }
+    .detail-section-title { font-size: 0.8rem; color: var(--text3); font-weight: 600; margin-bottom: 6px; margin-top: 14px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    /* ========== Settings Panel ========== */
+    .settings-panel {
+      position: fixed;
+      inset: 0;
+      z-index: 300;
+      background: var(--bg);
+      max-width: 480px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      animation: fadeIn 0.2s;
+    }
+    .settings-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .settings-head h2 { font-size: 1.1rem; color: var(--text); }
+    .settings-body { flex: 1; padding: 16px; overflow-y: auto; }
+    .settings-block {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 14px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    }
+    .settings-block h3 { font-size: 0.95rem; margin-bottom: 10px; color: var(--text); }
+    .settings-block p { font-size: 0.82rem; color: var(--text2); margin-bottom: 12px; line-height: 1.6; }
+    .settings-block ol { font-size: 0.82rem; color: var(--text2); padding-left: 18px; line-height: 1.8; }
+    .settings-btn {
+      display: block;
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 8px;
+      border-radius: var(--radius-sm);
+      border: none;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      text-align: center;
+      transition: 0.15s;
+    }
+    .settings-btn:active { transform: scale(0.98); }
+    .settings-btn.export { background: var(--accent); color: #fff; }
+    .settings-btn.import { background: var(--surface2); color: var(--text); }
+    .settings-btn.danger { background: #fde8e8; color: var(--red); }
+    #importFile { display: none; }
+
+    /* ========== Toast ========== */
+    .toast {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 500;
+      background: #333;
+      color: #fff;
+      padding: 12px 22px;
+      border-radius: 24px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      box-shadow: var(--shadow-lg);
+      animation: toastIn 0.3s, toastOut 0.3s 1.7s forwards;
+      pointer-events: none;
+    }
+    @keyframes toastIn { from { opacity: 0; transform: translateX(-50%) translateY(-10px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+    @keyframes toastOut { from { opacity: 1; } to { opacity: 0; } }
+
+    /* ========== Confirm Dialog ========== */
+    .confirm-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 400;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: fadeIn 0.2s;
+      padding: 20px;
+    }
+    .confirm-box {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 20px;
+      width: 100%;
+      max-width: 300px;
+      text-align: center;
+      box-shadow: var(--shadow-lg);
+    }
+    .confirm-box p { margin-bottom: 16px; font-size: 0.95rem; line-height: 1.5; color: var(--text); }
+    .confirm-actions { display: flex; gap: 10px; }
+    .confirm-actions button {
+      flex: 1; padding: 11px;
+      border-radius: var(--radius-sm);
+      border: none;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .confirm-actions .cancel { background: var(--surface2); color: var(--text); }
+    .confirm-actions .confirm { background: var(--red); color: #fff; }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="header">
+    <span class="header-title">📽 个人记录</span>
+    <div class="header-actions">
+      <button class="icon-btn" id="btnSettings" title="设置">⚙️</button>
+    </div>
+  </header>
+
+  <!-- Search -->
+  <div class="search-wrap">
+    <div class="search-box">
+      <span class="search-icon">🔍</span>
+      <input class="search-input" id="searchInput" type="text" placeholder="搜索标题...">
+      <button class="search-clear" id="searchClear">✕</button>
+    </div>
+  </div>
+
+  <!-- Filter Chips -->
+  <div class="filter-row" id="filterRow"></div>
+
+  <!-- Cards -->
+  <div class="list-area" id="listArea"></div>
+
+  <!-- FAB -->
+  <button class="fab" id="fabAdd">+</button>
+
+  <!-- Bottom Tabs -->
+  <nav class="bottom-tabs" id="bottomTabs"></nav>
+
+  <!-- Add/Edit Modal -->
+  <div class="overlay" id="formOverlay" style="display:none;">
+    <div class="modal">
+      <div class="modal-handle"></div>
+      <div class="modal-title" id="formTitle">添加记录</div>
+      <div class="form-group">
+        <label class="form-label">标题 *</label>
+        <input class="form-input" id="fTitle" type="text" placeholder="输入标题">
+      </div>
+      <div class="form-group">
+        <label class="form-label">封面图片</label>
+        <input class="form-input" id="fCover" type="url" placeholder="粘贴图片URL，或用下方按钮添加">
+        <div class="cover-preview-row" id="coverPreviewRow" style="display:none;">
+          <div id="coverPreviewWrap" style="flex-shrink:0;">
+            <div class="cover-preview-placeholder" id="coverPlaceholder">🖼️</div>
+            <img class="cover-preview" id="coverPreview" src="" alt="" style="display:none;">
+          </div>
+          <button class="cover-action-btn" id="btnCoverClear" style="flex:0;padding:6px 10px;font-size:0.75rem;">✕ 清除</button>
+        </div>
+        <div class="cover-actions">
+          <button class="cover-action-btn" id="btnGallery">📷 从相册</button>
+          <button class="cover-action-btn" id="btnSearchCover">🔍 搜封面</button>
+        </div>
+        <input type="file" id="galleryInput" accept="image/*" style="display:none;">
+        <!-- Cover search results -->
+        <div class="cover-search-panel" id="coverSearchPanel">
+          <div class="cover-search-loading" id="coverSearchLoading" style="display:none;">⏳ 搜索中...</div>
+          <div class="cover-search-empty" id="coverSearchEmpty" style="display:none;">未找到封面，请尝试其他关键词</div>
+          <div class="cover-search-grid" id="coverSearchGrid"></div>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" id="fExtraLabel">导演</label>
+          <input class="form-input" id="fExtra" type="text" placeholder="输入">
+        </div>
+        <div class="form-group">
+          <label class="form-label">年份</label>
+          <input class="form-input" id="fYear" type="text" placeholder="2024" inputmode="numeric">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">评分</label>
+        <div class="star-input" id="starInput"></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">状态</label>
+        <div class="filter-row" id="fStatusRow" style="padding:0;"></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">笔记</label>
+        <textarea class="form-textarea" id="fNotes" placeholder="写点想法..."></textarea>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="btnSave">💾 保存</button>
+        <button class="btn btn-secondary" id="btnCancel">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detail Modal -->
+  <div class="overlay" id="detailOverlay" style="display:none;">
+    <div class="modal" id="detailModal"></div>
+  </div>
+
+  <!-- Settings Panel -->
+  <div class="settings-panel" id="settingsPanel" style="display:none;">
+    <div class="settings-head">
+      <h2>⚙️ 设置</h2>
+      <button class="icon-btn" id="btnSettingsClose">✕</button>
+    </div>
+    <div class="settings-body">
+      <div class="settings-block">
+        <h3>📱 安装到手机桌面</h3>
+        <p>想让本页像 App 一样出现在手机桌面？需要先部署到网上：</p>
+        <ol>
+          <li>注册 <b>GitHub</b> 账号 (github.com)</li>
+          <li>创建新仓库（如 my-tracker）</li>
+          <li>上传这 3 个文件到仓库</li>
+          <li>Settings → Pages → 选 main 分支 → Save</li>
+          <li>等 1 分钟后访问 <b>https://你的用户名.github.io/my-tracker/</b></li>
+          <li>Chrome 浏览器打开该地址 → 菜单 → <b>"添加到主屏幕"</b></li>
+        </ol>
+        <p style="font-size:0.75rem;color:var(--text3);margin-top:8px;">（部署后图标、离线功能、全屏运行全部自动生效）</p>
+      </div>
+      <div class="settings-block">
+        <h3>📦 数据备份</h3>
+        <p>导出所有记录为 JSON 文件保存。以后可导入恢复。</p>
+        <button class="settings-btn export" id="btnExport">📤 导出数据</button>
+        <button class="settings-btn import" id="btnImport">📥 导入数据</button>
+        <input type="file" id="importFile" accept=".json">
+      </div>
+      <div class="settings-block">
+        <h3>🗑 数据管理</h3>
+        <p>删除所有记录及本地存储的封面图片。建议先导出备份！</p>
+        <button class="settings-btn danger" id="btnClearAll">⚠️ 清空全部数据</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast" style="display:none;"></div>
+
+  <!-- Confirm Dialog -->
+  <div class="confirm-overlay" id="confirmOverlay" style="display:none;">
+    <div class="confirm-box">
+      <p id="confirmMsg"></p>
+      <div class="confirm-actions">
+        <button class="cancel" id="confirmNo">取消</button>
+        <button class="confirm" id="confirmYes">确认</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  (function() {
+    // ==================== CONSTANTS ====================
+    const TYPES = [
+      { key: 'movies',  label: '电影', icon: '🎬', extraLabel: '导演',   searchType: 'web', statuses: [
+        { key: 'want',  label: '想看', cls: 'tag-want' },
+        { key: 'done',  label: '已看', cls: 'tag-done' },
+      ]},
+      { key: 'books',   label: '书籍', icon: '📚', extraLabel: '作者',   searchType: 'api', statuses: [
+        { key: 'want',  label: '想读', cls: 'tag-want' },
+        { key: 'doing', label: '在读', cls: 'tag-doing' },
+        { key: 'done',  label: '已读', cls: 'tag-done' },
+      ]},
+      { key: 'comics',  label: '漫画', icon: '📖', extraLabel: '作者',   searchType: 'web', statuses: [
+        { key: 'want',  label: '想看', cls: 'tag-want' },
+        { key: 'doing', label: '在看', cls: 'tag-doing' },
+        { key: 'done',  label: '已看', cls: 'tag-done' },
+      ]},
+    ];
+
+    const STORAGE_KEY = 'tracker_data';
+    const IDB_PREFIX = 'idb://';
+
+    // ==================== INDEXEDDB IMAGE STORE ====================
+    const ImageStore = (() => {
+      const DB_NAME = 'tracker_images';
+      const STORE_NAME = 'images';
+      let db = null;
+
+      async function open() {
+        if (db) return db;
+        return new Promise((resolve, reject) => {
+          const req = indexedDB.open(DB_NAME, 1);
+          req.onupgradeneeded = (e) => {
+            const db = e.target.result;
+            if (!db.objectStoreNames.contains(STORE_NAME)) {
+              db.createObjectStore(STORE_NAME);
+            }
+          };
+          req.onsuccess = (e) => { db = e.target.result; resolve(db); };
+          req.onerror = () => reject(req.error);
+        });
+      }
+
+      async function put(base64Data) {
+        const db = await open();
+        const key = 'img_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 6);
+        return new Promise((resolve, reject) => {
+          const tx = db.transaction(STORE_NAME, 'readwrite');
+          tx.objectStore(STORE_NAME).put(base64Data, key);
+          tx.oncomplete = () => resolve(key);
+          tx.onerror = () => reject(tx.error);
+        });
+      }
+
+      async function get(key) {
+        const db = await open();
+        return new Promise((resolve, reject) => {
+          const tx = db.transaction(STORE_NAME, 'readonly');
+          const req = tx.objectStore(STORE_NAME).get(key);
+          req.onsuccess = () => resolve(req.result);
+          req.onerror = () => reject(req.error);
+        });
+      }
+
+      async function del(key) {
+        const db = await open();
+        return new Promise((resolve, reject) => {
+          const tx = db.transaction(STORE_NAME, 'readwrite');
+          tx.objectStore(STORE_NAME).delete(key);
+          tx.oncomplete = () => resolve();
+          tx.onerror = () => reject(tx.error);
+        });
+      }
+
+      async function clear() {
+        const db = await open();
+        return new Promise((resolve, reject) => {
+          const tx = db.transaction(STORE_NAME, 'readwrite');
+          tx.objectStore(STORE_NAME).clear();
+          tx.oncomplete = () => resolve();
+          tx.onerror = () => reject(tx.error);
+        });
+      }
+
+      return { open, put, get, del, clear };
+    })();
+
+    // ==================== STATE ====================
+    let data = { movies: [], books: [], comics: [] };
+    let currentTab = 'movies';
+    let currentFilter = 'all';
+    let searchQuery = '';
+    let editingId = null;
+    let formRating = 0;
+    let formStatus = '';
+    let formCoverValue = ''; // 'idb://key' | 'http...' | ''
+
+    // ==================== DOM REFS ====================
+    const $ = (s) => document.querySelector(s);
+
+    const listArea = $('#listArea');
+    const filterRow = $('#filterRow');
+    const bottomTabs = $('#bottomTabs');
+    const searchInput = $('#searchInput');
+    const searchClear = $('#searchClear');
+    const fabAdd = $('#fabAdd');
+
+    // Form
+    const formOverlay = $('#formOverlay');
+    const formTitle = $('#formTitle');
+    const fTitle = $('#fTitle');
+    const fCover = $('#fCover');
+    const fExtra = $('#fExtra');
+    const fExtraLabel = $('#fExtraLabel');
+    const fYear = $('#fYear');
+    const fNotes = $('#fNotes');
+    const fStatusRow = $('#fStatusRow');
+    const starInput = $('#starInput');
+    const coverPreview = $('#coverPreview');
+    const coverPlaceholder = $('#coverPlaceholder');
+    const coverPreviewRow = $('#coverPreviewRow');
+    const galleryInput = $('#galleryInput');
+    const coverSearchPanel = $('#coverSearchPanel');
+    const coverSearchGrid = $('#coverSearchGrid');
+    const coverSearchLoading = $('#coverSearchLoading');
+    const coverSearchEmpty = $('#coverSearchEmpty');
+
+    // Detail
+    const detailOverlay = $('#detailOverlay');
+    const detailModal = $('#detailModal');
+
+    // Settings
+    const settingsPanel = $('#settingsPanel');
+    const importFile = $('#importFile');
+
+    // Toast
+    const toast = $('#toast');
+    let toastTimer;
+
+    // Confirm
+    const confirmOverlay = $('#confirmOverlay');
+    const confirmMsg = $('#confirmMsg');
+    let confirmCallback = null;
+
+    // ==================== DATA ====================
+    function loadData() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) data = JSON.parse(raw);
+        TYPES.forEach(t => { if (!data[t.key]) data[t.key] = []; });
+      } catch(e) {
+        data = { movies: [], books: [], comics: [] };
+      }
+    }
+
+    function saveData() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      renderAll();
+    }
+
+    function getCurrentType() {
+      return TYPES.find(t => t.key === currentTab);
+    }
+
+    function getFilteredItems() {
+      const type = getCurrentType();
+      let items = data[currentTab] || [];
+      if (searchQuery.trim()) {
+        const q = searchQuery.trim().toLowerCase();
+        items = items.filter(item => item.title.toLowerCase().includes(q));
+      }
+      if (currentFilter !== 'all') {
+        items = items.filter(item => item.status === currentFilter);
+      }
+      items = [...items].sort((a, b) => b.createdAt - a.createdAt);
+      return { items, type };
+    }
+
+    // ==================== ID GENERATOR ====================
+    function genId() {
+      return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+    }
+
+    // ==================== COVER URL HELPERS ====================
+    function isIdbCover(url) {
+      return url && url.startsWith(IDB_PREFIX);
+    }
+
+    function getIdbKey(url) {
+      return url.replace(IDB_PREFIX, '');
+    }
+
+    async function resolveCoverSrc(url) {
+      if (!url) return '';
+      if (isIdbCover(url)) {
+        try {
+          const data = await ImageStore.get(getIdbKey(url));
+          return data || '';
+        } catch(e) {
+          return '';
+        }
+      }
+      return url;
+    }
+
+    // ==================== RENDER ====================
+    function renderAll() {
+      renderTabs();
+      renderFilters();
+      renderList();
+    }
+
+    function renderTabs() {
+      bottomTabs.innerHTML = TYPES.map(t => {
+        const count = (data[t.key] || []).length;
+        const active = t.key === currentTab ? ' active' : '';
+        return `
+          <button class="tab-item${active}" data-tab="${t.key}">
+            <span class="tab-icon">${t.icon}</span>
+            ${t.label}
+            ${count > 0 ? `<span class="tab-badge">${count}</span>` : ''}
+          </button>`;
+      }).join('');
+
+      bottomTabs.querySelectorAll('.tab-item').forEach(btn => {
+        btn.addEventListener('click', () => {
+          currentTab = btn.dataset.tab;
+          currentFilter = 'all';
+          searchQuery = '';
+          searchInput.value = '';
+          searchClear.classList.remove('visible');
+          editingId = null;
+          renderAll();
+        });
+      });
+    }
+
+    function renderFilters() {
+      const type = getCurrentType();
+      const chips = [
+        { key: 'all', label: '全部' },
+        ...type.statuses.map(s => ({ key: s.key, label: s.label })),
+      ];
+      filterRow.innerHTML = chips.map(c => {
+        const active = c.key === currentFilter ? ' active' : '';
+        return `<button class="chip${active}" data-filter="${c.key}">${c.label}</button>`;
+      }).join('');
+
+      filterRow.querySelectorAll('.chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+          currentFilter = chip.dataset.filter;
+          renderFilters();
+          renderList();
+        });
+      });
+    }
+
+    function renderList() {
+      const { items, type } = getFilteredItems();
+
+      if (items.length === 0) {
+        const msg = searchQuery.trim()
+          ? `没有找到包含"${searchQuery.trim()}"的${type.label}`
+          : `还没有${type.label}记录\n点击右下角 + 开始添加吧`;
+        listArea.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">${searchQuery.trim() ? '🔍' : type.icon}</div>
+            <div class="empty-text">${msg.replace(/\n/g, '<br>')}</div>
+          </div>`;
+        return;
+      }
+
+      // Build cards
+      listArea.innerHTML = items.map(item => {
+        const typeDef = TYPES.find(t => t.key === currentTab);
+        const statusDef = typeDef.statuses.find(s => s.key === item.status);
+        const statusLabel = statusDef ? statusDef.label : '';
+        const statusCls = statusDef ? statusDef.cls : '';
+        const starsHtml = renderStars(item.rating || 0, 'sm');
+
+        const metaParts = [];
+        if (item.director) metaParts.push(item.director);
+        else if (item.author) metaParts.push(item.author);
+        if (item.year) metaParts.push(item.year);
+        const metaText = metaParts.join(' · ');
+
+        const coverId = 'cover_' + item.id;
+        const placeholderId = 'ph_' + item.id;
+
+        return `
+          <div class="card" data-id="${item.id}">
+            <img class="card-cover" id="${coverId}" src="" alt="" loading="lazy" style="display:none;"
+              onerror="this.style.display='none';document.getElementById('${placeholderId}').style.display='flex';"
+              onload="this.style.display='block';document.getElementById('${placeholderId}').style.display='none';">
+            <div class="card-cover-placeholder" id="${placeholderId}">${typeDef.icon}</div>
+            <div class="card-info">
+              <div class="card-title">${escapeHtml(item.title)}</div>
+              ${metaText ? `<div class="card-meta">${escapeHtml(metaText)}</div>` : ''}
+              <div class="card-bottom">
+                <div class="stars-sm">${starsHtml}</div>
+                <span class="status-tag ${statusCls}">${statusLabel}</span>
+              </div>
+            </div>
+          </div>`;
+      }).join('');
+
+      // Load cover images async
+      listArea.querySelectorAll('.card').forEach(card => {
+        const item = items.find(i => i.id === card.dataset.id);
+        if (item && item.coverUrl) {
+          const img = card.querySelector('img');
+          resolveCoverSrc(item.coverUrl).then(src => {
+            if (src) { img.src = src; img.style.display = 'block';
+              const ph = card.querySelector('.card-cover-placeholder');
+              if (ph) ph.style.display = 'none';
+            }
+          });
+        }
+        card.addEventListener('click', () => showDetail(card.dataset.id));
+      });
+    }
+
+    function renderStars(rating, size) {
+      const cls = size === 'sm' ? 'star-sm' : 'detail-star';
+      let html = '';
+      for (let i = 1; i <= 5; i++) {
+        html += `<span class="${cls} ${i <= rating ? 'on' : 'off'}">★</span>`;
+      }
+      return html;
+    }
+
+    async function renderCoverPreviewUI() {
+      const url = formCoverValue;
+      if (url) {
+        coverPreviewRow.style.display = 'flex';
+        const src = await resolveCoverSrc(url);
+        if (src) {
+          coverPreview.src = src;
+          coverPreview.style.display = 'block';
+          coverPlaceholder.style.display = 'none';
+        } else {
+          coverPreview.style.display = 'none';
+          coverPlaceholder.style.display = 'flex';
+        }
+      } else {
+        coverPreviewRow.style.display = 'none';
+        coverPreview.src = '';
+        coverPreview.style.display = 'none';
+        coverPlaceholder.style.display = 'flex';
+      }
+    }
+
+    function renderStarInput() {
+      starInput.innerHTML = '';
+      for (let i = 1; i <= 5; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'star-input-btn' + (i <= formRating ? ' on' : '');
+        btn.textContent = '★';
+        btn.type = 'button';
+        btn.addEventListener('click', () => {
+          formRating = i;
+          renderStarInput();
+        });
+        starInput.appendChild(btn);
+      }
+    }
+
+    function renderFormStatuses() {
+      const type = getCurrentType();
+      fStatusRow.innerHTML = type.statuses.map(s => {
+        const active = s.key === formStatus ? ' active' : '';
+        return `<button class="chip${active}" data-status="${s.key}">${s.label}</button>`;
+      }).join('');
+
+      fStatusRow.querySelectorAll('.chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+          formStatus = chip.dataset.status;
+          renderFormStatuses();
+        });
+      });
+    }
+
+    // ==================== FORM ====================
+    function openForm(item) {
+      const type = getCurrentType();
+      fExtraLabel.textContent = type.extraLabel;
+      fExtra.placeholder = `输入${type.extraLabel}`;
+
+      if (item) {
+        editingId = item.id;
+        formTitle.textContent = '编辑记录';
+        fTitle.value = item.title || '';
+        fExtra.value = (item.director || item.author || '');
+        fYear.value = item.year || '';
+        fNotes.value = item.notes || '';
+        formRating = item.rating || 0;
+        formStatus = item.status || type.statuses[0].key;
+        formCoverValue = item.coverUrl || '';
+      } else {
+        editingId = null;
+        formTitle.textContent = `添加${type.label}`;
+        fTitle.value = '';
+        fExtra.value = '';
+        fYear.value = '';
+        fNotes.value = '';
+        formRating = 0;
+        formStatus = type.statuses[0].key;
+        formCoverValue = '';
+      }
+
+      // Sync text input with formCoverValue (show IDB keys as empty or special text)
+      if (isIdbCover(formCoverValue)) {
+        fCover.value = '(已从相册选择)';
+      } else {
+        fCover.value = formCoverValue;
+      }
+
+      coverSearchPanel.style.display = 'none';
+      renderCoverPreviewUI();
+      renderStarInput();
+      renderFormStatuses();
+      formOverlay.style.display = 'flex';
+      setTimeout(() => fTitle.focus(), 300);
+    }
+
+    function closeForm() {
+      formOverlay.style.display = 'none';
+      editingId = null;
+      formCoverValue = '';
+    }
+
+    // ==================== GALLERY PICKER ====================
+    function openGallery() {
+      galleryInput.click();
+    }
+
+    galleryInput.addEventListener('change', async () => {
+      const file = galleryInput.files[0];
+      if (!file) return;
+
+      try {
+        showToast('⏳ 处理图片中...');
+        const base64 = await compressImage(file);
+        const key = await ImageStore.put(base64);
+        formCoverValue = IDB_PREFIX + key;
+        fCover.value = '(已从相册选择)';
+        await renderCoverPreviewUI();
+        showToast('📷 封面已添加');
+      } catch(e) {
+        showToast('❌ 图片处理失败');
+        console.error(e);
+      }
+      galleryInput.value = '';
+    });
+
+    function compressImage(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onload = () => {
+            const maxW = 400;
+            let w = img.width, h = img.height;
+            if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
+            const canvas = document.createElement('canvas');
+            canvas.width = w; canvas.height = h;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, w, h);
+            resolve(canvas.toDataURL('image/jpeg', 0.7));
+          };
+          img.onerror = reject;
+          img.src = e.target.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    // ==================== COVER SEARCH ====================
+    function searchCover() {
+      const title = fTitle.value.trim();
+      if (!title) {
+        showToast('⚠️ 请先输入标题');
+        fTitle.focus();
+        return;
+      }
+
+      const type = getCurrentType();
+
+      if (type.searchType === 'api') {
+        // Books: Google Books API
+        searchBooksCover(title);
+      } else {
+        // Movies & Comics: open web search
+        searchWebCover(title, type.label);
+      }
+    }
+
+    async function searchBooksCover(title) {
+      coverSearchPanel.style.display = 'block';
+      coverSearchGrid.innerHTML = '';
+      coverSearchLoading.style.display = 'block';
+      coverSearchEmpty.style.display = 'none';
+
+      try {
+        const query = encodeURIComponent(title);
+        const resp = await fetch(`https://www.googleapis.com/books/v1/volumes?q=intitle:${query}&maxResults=6`);
+        const json = await resp.json();
+
+        coverSearchLoading.style.display = 'none';
+
+        if (!json.items || json.items.length === 0) {
+          coverSearchEmpty.style.display = 'block';
+          return;
+        }
+
+        const covers = [];
+        json.items.forEach(item => {
+          const info = item.volumeInfo;
+          if (info.imageLinks) {
+            const url = info.imageLinks.thumbnail || info.imageLinks.smallThumbnail;
+            if (url) covers.push({
+              url: url.replace('http://', 'https://'),
+              title: info.title || '',
+            });
+          }
+        });
+
+        if (covers.length === 0) {
+          coverSearchEmpty.style.display = 'block';
+          return;
+        }
+
+        // Deduplicate
+        const unique = [];
+        const seen = new Set();
+        covers.forEach(c => {
+          if (!seen.has(c.url)) { seen.add(c.url); unique.push(c); }
+        });
+
+        coverSearchGrid.innerHTML = unique.map(c => `
+          <div class="cover-search-item" data-url="${escapeHtml(c.url)}">
+            <img src="${escapeHtml(c.url)}" alt="${escapeHtml(c.title)}" loading="lazy"
+              onerror="this.parentElement.style.display='none';">
+          </div>
+        `).join('');
+
+        coverSearchGrid.querySelectorAll('.cover-search-item').forEach(el => {
+          el.addEventListener('click', () => {
+            const url = el.dataset.url;
+            formCoverValue = url;
+            fCover.value = url;
+            coverSearchPanel.style.display = 'none';
+            renderCoverPreviewUI();
+            showToast('✅ 封面已选择');
+          });
+        });
+      } catch(e) {
+        coverSearchLoading.style.display = 'none';
+        coverSearchEmpty.textContent = '搜索失败，请检查网络';
+        coverSearchEmpty.style.display = 'block';
+      }
+    }
+
+    function searchWebCover(title, label) {
+      const query = encodeURIComponent(title + ' 封面');
+      const url = `https://www.google.com/search?tbm=isch&q=${query}`;
+      window.open(url, '_blank');
+      showToast('🔍 已打开图片搜索\n找到后长按图片→复制链接→粘贴回来');
+    }
+
+    function clearCover() {
+      // If was IDB image, delete it
+      if (isIdbCover(formCoverValue)) {
+        ImageStore.del(getIdbKey(formCoverValue)).catch(() => {});
+      }
+      formCoverValue = '';
+      fCover.value = '';
+      coverSearchPanel.style.display = 'none';
+      renderCoverPreviewUI();
+    }
+
+    // ==================== SAVE FORM ====================
+    async function saveForm() {
+      const title = fTitle.value.trim();
+      if (!title) {
+        showToast('⚠️ 请输入标题');
+        fTitle.focus();
+        return;
+      }
+
+      // If user typed a URL manually, use it
+      const typedUrl = fCover.value.trim();
+      if (typedUrl && typedUrl !== '(已从相册选择)' && typedUrl !== formCoverValue) {
+        // User typed a URL, clear old IDB if any
+        if (isIdbCover(formCoverValue)) {
+          ImageStore.del(getIdbKey(formCoverValue)).catch(() => {});
+        }
+        formCoverValue = typedUrl;
+      }
+
+      const extraVal = fExtra.value.trim();
+      const yearVal = fYear.value.trim();
+      const item = {
+        id: editingId || genId(),
+        title,
+        coverUrl: formCoverValue,
+        rating: formRating,
+        status: formStatus,
+        notes: fNotes.value.trim(),
+        year: yearVal,
+        createdAt: editingId
+          ? (data[currentTab].find(i => i.id === editingId) || {}).createdAt || Date.now()
+          : Date.now(),
+      };
+
+      if (currentTab === 'movies') {
+        item.director = extraVal;
+      } else {
+        item.author = extraVal;
+      }
+
+      // If editing, remove old IDB cover if changed
+      if (editingId) {
+        const oldItem = data[currentTab].find(i => i.id === editingId);
+        if (oldItem && oldItem.coverUrl !== formCoverValue && isIdbCover(oldItem.coverUrl)) {
+          ImageStore.del(getIdbKey(oldItem.coverUrl)).catch(() => {});
+        }
+      }
+
+      const list = data[currentTab];
+      if (editingId) {
+        const idx = list.findIndex(i => i.id === editingId);
+        if (idx >= 0) {
+          item.createdAt = list[idx].createdAt;
+          list[idx] = item;
+        }
+      } else {
+        list.push(item);
+      }
+
+      saveData();
+      closeForm();
+      showToast(editingId ? '✅ 已更新' : '✅ 已添加');
+    }
+
+    // ==================== DETAIL ====================
+    async function showDetail(id) {
+      const item = data[currentTab].find(i => i.id === id);
+      if (!item) return;
+
+      const type = getCurrentType();
+      const statusDef = type.statuses.find(s => s.key === item.status);
+      const statusLabel = statusDef ? statusDef.label : '';
+      const statusCls = statusDef ? statusDef.cls : '';
+      const extraVal = item.director || item.author || '';
+
+      let coverSection;
+      const coverSrc = await resolveCoverSrc(item.coverUrl);
+      if (coverSrc) {
+        coverSection = `<div class="detail-cover-wrap">
+          <img class="detail-cover" src="${escapeHtml(coverSrc)}" alt=""
+            onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+          <div class="detail-cover-placeholder" style="display:none;">${type.icon}</div>
+        </div>`;
+      } else {
+        coverSection = `<div class="detail-cover-placeholder">${type.icon}</div>`;
+      }
+
+      detailModal.innerHTML = `
+        <div class="modal-handle"></div>
+        ${coverSection}
+        <div class="detail-title">${escapeHtml(item.title)}</div>
+        ${extraVal || item.year ? `<div class="detail-meta">${[extraVal, item.year].filter(Boolean).join(' · ')}</div>` : ''}
+        <div class="detail-stars">${renderStars(item.rating || 0, 'detail')}</div>
+        <div class="detail-tags"><span class="status-tag ${statusCls}">${statusLabel}</span></div>
+        ${item.notes ? `<div class="detail-section-title">📝 笔记</div><div class="detail-notes">${escapeHtml(item.notes)}</div>` : ''}
+        <div class="btn-row" style="margin-top:20px;">
+          <button class="btn btn-primary" id="btnDetailEdit">✏️ 编辑</button>
+          <button class="btn btn-danger" id="btnDetailDelete">🗑 删除</button>
+        </div>
+      `;
+
+      detailOverlay.style.display = 'flex';
+
+      $('#btnDetailEdit').addEventListener('click', () => {
+        detailOverlay.style.display = 'none';
+        openForm(item);
+      });
+      $('#btnDetailDelete').addEventListener('click', () => {
+        detailOverlay.style.display = 'none';
+        confirmDelete(id);
+      });
+    }
+
+    function closeDetail() {
+      detailOverlay.style.display = 'none';
+    }
+
+    // ==================== DELETE ====================
+    function confirmDelete(id) {
+      showConfirm('确定要删除这条记录吗？此操作不可恢复。', async () => {
+        const item = data[currentTab].find(i => i.id === id);
+        if (item && isIdbCover(item.coverUrl)) {
+          await ImageStore.del(getIdbKey(item.coverUrl)).catch(() => {});
+        }
+        data[currentTab] = data[currentTab].filter(i => i.id !== id);
+        saveData();
+        showToast('🗑 已删除');
+      });
+    }
+
+    // ==================== TOAST ====================
+    function showToast(msg) {
+      clearTimeout(toastTimer);
+      toast.textContent = msg;
+      toast.style.display = 'block';
+      toast.style.animation = 'none';
+      toast.offsetHeight;
+      toast.style.animation = 'toastIn 0.3s, toastOut 0.3s 1.7s forwards';
+      toastTimer = setTimeout(() => { toast.style.display = 'none'; }, 2100);
+    }
+
+    // ==================== CONFIRM ====================
+    function showConfirm(msg, cb) {
+      confirmMsg.textContent = msg;
+      confirmCallback = cb;
+      confirmOverlay.style.display = 'flex';
+    }
+
+    function hideConfirm() {
+      confirmOverlay.style.display = 'none';
+      confirmCallback = null;
+    }
+
+    // ==================== SETTINGS ====================
+    function openSettings() { settingsPanel.style.display = 'flex'; }
+    function closeSettings() { settingsPanel.style.display = 'none'; }
+
+    function exportData() {
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const now = new Date();
+      const dateStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+      a.download = `个人记录备份_${dateStr}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('📤 导出成功（封面图不包含在备份中）');
+    }
+
+    function importData(file) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const imported = JSON.parse(e.target.result);
+          if (!imported.movies && !imported.books && !imported.comics) {
+            throw new Error('无效的数据格式');
+          }
+          data = {
+            movies: imported.movies || [],
+            books: imported.books || [],
+            comics: imported.comics || [],
+          };
+          saveData();
+          showToast('📥 导入成功');
+        } catch(err) {
+          showToast('❌ 文件格式不正确');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    async function clearAll() {
+      showConfirm('确定要清空全部数据吗？\n包括所有记录和本地封面图片。\n此操作不可恢复！建议先导出备份。', async () => {
+        // Delete all IDB cover images
+        for (const typeKey of ['movies', 'books', 'comics']) {
+          for (const item of (data[typeKey] || [])) {
+            if (isIdbCover(item.coverUrl)) {
+              await ImageStore.del(getIdbKey(item.coverUrl)).catch(() => {});
+            }
+          }
+        }
+        data = { movies: [], books: [], comics: [] };
+        saveData();
+        showToast('🗑 已清空全部数据');
+      });
+    }
+
+    // ==================== EVENT LISTENERS ====================
+
+    // Search
+    searchInput.addEventListener('input', () => {
+      searchQuery = searchInput.value;
+      searchClear.classList.toggle('visible', searchQuery.length > 0);
+      renderList();
+    });
+    searchClear.addEventListener('click', () => {
+      searchInput.value = '';
+      searchQuery = '';
+      searchClear.classList.remove('visible');
+      renderList();
+      searchInput.focus();
+    });
+
+    // FAB
+    fabAdd.addEventListener('click', () => openForm(null));
+
+    // Form buttons
+    $('#btnSave').addEventListener('click', saveForm);
+    $('#btnCancel').addEventListener('click', closeForm);
+    formOverlay.addEventListener('click', (e) => {
+      if (e.target === formOverlay) closeForm();
+    });
+
+    // Cover actions
+    $('#btnGallery').addEventListener('click', openGallery);
+    $('#btnSearchCover').addEventListener('click', searchCover);
+    $('#btnCoverClear').addEventListener('click', clearCover);
+    fCover.addEventListener('input', () => {
+      const val = fCover.value.trim();
+      if (val && val !== '(已从相册选择)' && val !== formCoverValue) {
+        // User is typing a URL manually
+        formCoverValue = val;
+        renderCoverPreviewUI();
+      }
+    });
+
+    // Detail overlay
+    detailOverlay.addEventListener('click', (e) => {
+      if (e.target === detailOverlay) closeDetail();
+    });
+
+    // Settings
+    $('#btnSettings').addEventListener('click', openSettings);
+    $('#btnSettingsClose').addEventListener('click', closeSettings);
+    $('#btnExport').addEventListener('click', exportData);
+    $('#btnImport').addEventListener('click', () => importFile.click());
+    importFile.addEventListener('change', () => {
+      if (importFile.files[0]) {
+        importData(importFile.files[0]);
+        importFile.value = '';
+      }
+    });
+    $('#btnClearAll').addEventListener('click', clearAll);
+
+    // Confirm dialog
+    $('#confirmNo').addEventListener('click', hideConfirm);
+    $('#confirmYes').addEventListener('click', () => {
+      if (confirmCallback) confirmCallback();
+      hideConfirm();
+    });
+    confirmOverlay.addEventListener('click', (e) => {
+      if (e.target === confirmOverlay) hideConfirm();
+    });
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        if (settingsPanel.style.display === 'flex') closeSettings();
+        else if (formOverlay.style.display === 'flex') closeForm();
+        else if (detailOverlay.style.display === 'flex') closeDetail();
+        else if (confirmOverlay.style.display === 'flex') hideConfirm();
+      }
+    });
+
+    // ==================== HELPERS ====================
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    // ==================== SERVICE WORKER ====================
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').catch(() => {});
+      });
+    }
+
+    // ==================== INIT ====================
+    function init() {
+      loadData();
+      renderAll();
+    }
+
+    init();
+  })();
+  </script>
+</body>
+</html>
