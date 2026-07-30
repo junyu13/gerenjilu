@@ -536,6 +536,43 @@
     @keyframes toastIn { from { opacity: 0; transform: translateX(-50%) translateY(-10px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
     @keyframes toastOut { from { opacity: 1; } to { opacity: 0; } }
 
+    /* ========== Splash Screen ========== */
+    .splash {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      background: #f5f5f7;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      transition: opacity 0.4s, visibility 0.4s;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+    .splash.hide {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+    .splash-icon {
+      width: 100px;
+      height: 100px;
+      border-radius: 24px;
+      animation: splashPulse 1.2s ease-in-out infinite;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+    @keyframes splashPulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.08); }
+    }
+    .splash-text {
+      font-size: 0.95rem;
+      color: #9a9aa8;
+      letter-spacing: 0.5px;
+    }
+
     /* ========== Confirm Dialog ========== */
     .confirm-overlay {
       position: fixed;
@@ -573,6 +610,12 @@
   </style>
 </head>
 <body>
+
+  <!-- Splash Screen -->
+  <div class="splash" id="splash">
+    <img class="splash-icon" src="icon-192.png" alt="icon">
+    <div class="splash-text">hi,祝你开心</div>
+  </div>
 
   <!-- Header -->
   <header class="header">
@@ -1284,9 +1327,9 @@
 
     function searchWebCover(title, label) {
       const query = encodeURIComponent(title + ' 封面');
-      const url = `https://www.google.com/search?tbm=isch&q=${query}`;
+      const url = `https://image.baidu.com/search?word=${query}&tn=baiduimage`;
       window.open(url, '_blank');
-      showToast('🔍 已打开图片搜索\n找到后长按图片→复制链接→粘贴回来');
+      showToast('🔍 已打开百度图片搜索\n找到后长按图片→复制链接→粘贴回来');
     }
 
     function clearCover() {
@@ -1603,6 +1646,11 @@
     function init() {
       loadData();
       renderAll();
+      // Hide splash screen after app is ready
+      setTimeout(() => {
+        const splash = document.getElementById('splash');
+        if (splash) splash.classList.add('hide');
+      }, 800);
     }
 
     init();

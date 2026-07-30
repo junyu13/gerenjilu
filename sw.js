@@ -6,6 +6,8 @@ const PRE_CACHE = [
   './',
   './index.html',
   './manifest.json',
+  './icon-192.png',
+  './icon-512.png',
 ];
 
 // Install: pre-cache the app shell
